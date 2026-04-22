@@ -9,6 +9,10 @@ import (
 // mustRegisterOrGet registers a Collector or returns a previously-registered Collector with the same descriptor.
 // Like prometheus.MustRegister, but only panics if registration error is not prometheus.AlreadyRegisteredError.
 func mustRegisterOrGet[T prometheus.Collector](reg prometheus.Registerer, c T) T {
+	if reg == nil {
+		return c
+	}
+
 	if err := reg.Register(c); err != nil {
 		var are prometheus.AlreadyRegisteredError
 		if errors.As(err, &are) {
