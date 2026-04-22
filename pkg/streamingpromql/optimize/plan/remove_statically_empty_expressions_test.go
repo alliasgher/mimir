@@ -167,6 +167,23 @@ func TestRemoveStaticallyEmptyExpressionsOptimizationPass(t *testing.T) {
 			queryStart:      time.Unix(10000, 0),
 			expectUnchanged: true,
 		},
+		"non-conflicting equals matchers: should not optimize": {
+			expr:            `metric{pod="foo", env="bar"}`,
+			queryStart:      time.UnixMilli(thresholdMs),
+			expectUnchanged: true,
+		},
+		"non-equals matchers: should not optimize": {
+			expr:            `metric{pod=~"foo.+", pod!~".+bar"}`,
+			queryStart:      time.UnixMilli(thresholdMs),
+			expectUnchanged: true,
+		},
+		"conflicting equals matchers: should optimize": {
+			expr:       `metric{pod="foo", pod="bar"}`,
+			queryStart: time.UnixMilli(thresholdMs),
+			expectedPlan: `
+				- NoOp
+			`,
+		},
 	}
 
 	ctx := context.Background()
